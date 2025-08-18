@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import NavBar from "./Navbar";
-import Sidebar from "./SideBar";
+import NavBar from "./NavBar";
+import Sidebar from "./Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface LayoutProps {
