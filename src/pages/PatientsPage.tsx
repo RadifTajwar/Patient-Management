@@ -123,14 +123,7 @@ const PatientsPage = () => {
 
   return (
     <div
-      className="container mx-auto py-8 px-4"
-      style={{
-        marginLeft: "50px",
-        marginRight: "50px",
-        marginTop: "30px",
-        marginBottom: "30px",
-      }}
-    >
+      className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-6">Patients</h1>
 

@@ -32,6 +32,7 @@ import {
   saveRefreshToken,
   saveBMDC,
 } from "../utils/accessutils";
+import { access } from "fs";
 
 // Define form schema
 const formSchema = z.object({
@@ -63,7 +64,9 @@ const LoginPage: React.FC = () => {
       const token = response.data.token;
       const refreshToken = response.data.refreshToken;
       const bmdc = response.data.bmdc;
-
+      console.log("token is ", token);
+      console.log("refreshToken is ", refreshToken);
+      console.log("bmdc is ", bmdc);
       saveAccessToken(token);
       saveRefreshToken(refreshToken);
       saveBMDC(bmdc);

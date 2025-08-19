@@ -3,7 +3,7 @@ import { Menu, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
+import { UserButton } from "./auth/user-button";
 interface NavBarProps {
   onMenuToggle: () => void;
 }
@@ -24,9 +24,9 @@ const NavBar: React.FC<NavBarProps> = ({ onMenuToggle }) => {
   );
 
   return (
-    <div className="bg-white shadow-sm border-b p-4 flex items-center justify-between">
-      <div className="flex items-center">
-        {!isAuthPage && (
+    <div className="bg-white  p-4 flex items-center justify-between container">
+      <div className="flex items-center ">
+        
           <Button
             variant="ghost"
             size="icon"
@@ -36,24 +36,15 @@ const NavBar: React.FC<NavBarProps> = ({ onMenuToggle }) => {
           >
             <Menu className="h-6 w-6" />
           </Button>
-        )}
+        
         <h1 className="text-xl font-semibold">CarePad</h1>
       </div>
 
       {!isAuthPage && (
-        <Link
-          to="/profile"
-          className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground px-3 py-2 rounded-md transition-colors"
-        >
-          <Avatar className="h-8 w-8">
-            {/* <AvatarImage
-              src={`https://source.unsplash.com/random/100x100/?portrait`}
-              alt="Doctor"
-            /> */}
-            <AvatarFallback>{getInitials("Dr Kamran Akmal")}</AvatarFallback>
-          </Avatar>
-          <span className="text-sm font-medium">Dr Kamran Akmal</span>
-        </Link>
+        
+          
+         <UserButton/>
+     
       )}
     </div>
   );

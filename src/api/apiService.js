@@ -1,8 +1,8 @@
 import axios from 'axios';
-import {getAccessToken, getRefreshToken, getBMDC} from "../utils/accessutils";
+import { getAccessToken, getRefreshToken, getBMDC } from "../utils/accessutils";
 
 const api = axios.create({
-  baseURL: 'https://5107341b03b5.ngrok-free.app',
+  baseURL: 'https://85dc8115ee08.ngrok-free.app/',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -47,6 +47,20 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    /*checking the actual error parameter */
+    console.log("Error in response interceptor:");
+    if (error.response) {
+      console.log("Status:", error.response.status);
+      console.log("Data:", error.response.data);
+    } else if (error.request) {
+      console.log("Request sent but no response received");
+      console.log("Request:", error.request);
+    } else {
+      console.log("Something went wrong setting up the request:", error.message);
+    }
+    console.log("Error Code:", error.code);
+
+
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -61,9 +75,10 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
+      console.log('hey everyone wait till i refresh the token');
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const { data } = await axios.post('https://5107341b03b5.ngrok-free.app/auth/refresh', {
+        const { data } = await axios.post('https://85dc8115ee08.ngrok-free.app//auth/refresh', {
           refreshToken,
         });
 

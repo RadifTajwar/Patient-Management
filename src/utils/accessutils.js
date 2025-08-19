@@ -56,3 +56,7 @@ export const clearAccessToken = () => {
 export const clearRefreshToken = () => {
   localStorage.removeItem('refreshToken');
 };
+
+export const clearBMDC = () => {
+  localStorage.removeItem('bmdc');
+};
