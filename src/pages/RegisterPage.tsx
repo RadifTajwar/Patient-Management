@@ -1,12 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import BasicInfoStep from "@/components/registration/BasicInfoStep";
-import ContactInfoStep from "@/components/registration/ContactInfoStep";
-import EducationStep from "@/components/registration/EducationStep";
-import PracticeInfoStep from "@/components/registration/PracticeInfoStep";
-import PasswordStep from "@/components/registration/PasswordStep";
-import StepIndicator from "@/components/registration/StepIndicator";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,142 +11,112 @@ import {
 } from "@/components/ui/card";
 import { register } from "../api/auth";
 
-export interface Degree {
-  degree: string;
-  institution: string;
-  year: string;
-}
+// shadcn + react-hook-form + zod
+import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form } from "@/components/ui/form";
+import DoctorRegistrationForm from "@/components/auth/DoctorRegistrationForm";
+import { DoctorRegistrationData } from "@/interface/doctor/doctorInterfaces";
+import { z } from "zod";
 
-export interface DoctorRegistrationData {
-  // Basic Info
-  name: string;
-  specialty: string;
-  bmdcNumber: string;
-  profileImage: File | null;
+const VALID_PROMO = "123456789";
 
-  // Contact Info
-  email: string;
-  phone: string;
-  address: string;
+export const doctorRegistrationSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(1, "Name is required")
+      .regex(
+        /^[A-Za-z.\s]+$/,
+        "Name can contain only letters, spaces, and dots"
+      ),
 
-  // Education
-  degrees: Degree[];
+    bmdcNumber: z
+      .string()
+      .trim()
+      .length(10, "BMDC must be exactly 10 characters")
+      .regex(/^[A-Za-z0-9]+$/, "BMDC must contain only letters and numbers")
+      .transform((val) => val.toUpperCase()),
 
-  // Practice Info
-  consultationLocations: string[];
+    phone: z
+      .string()
+      .trim()
+      .regex(/^[0-9]{11}$/, "Phone number must be exactly 11 digits"),
 
-  // Password
-  password: string;
-  confirmPassword: string;
-}
+    email: z
+      .string()
+      .trim()
+      .email("Invalid email address")
+      .transform((val) => val?.toLowerCase()),
 
-const STEPS = [
-  { name: "Basic Info", description: "Personal Details" },
-  { name: "Contact", description: "Contact Information" },
-  { name: "Credentials", description: "Professional Qualifications" },
-  { name: "Practice", description: "Work Information" },
-  { name: "Password", description: "Create Password" },
-];
+    promoCode: z.string().trim().min(1, "Promo code is required"),
 
-const RegisterPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<DoctorRegistrationData>({
-    name: "",
-    specialty: "",
-    bmdcNumber: "",
-    profileImage: null,
-    email: "",
-    phone: "",
-    address: "",
-    degrees: [{ degree: "", institution: "", year: "" }],
-    consultationLocations: [""],
-    password: "",
-    confirmPassword: "",
+    password: z.string().min(1, "Password is required"),
+
+    confirmPassword: z.string().min(1, "Confirm password is required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   });
 
-  const updateFormData = (data: Partial<DoctorRegistrationData>) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-  };
+// -------------------- RegisterPage Component --------------------
+const RegisterPage: React.FC = () => {
+  const navigate = useNavigate();
 
-  const handleNextStep = () => {
-    if (currentStep < STEPS.length - 1) {
-      setCurrentStep(currentStep + 1);
-      window.scrollTo(0, 0);
-    }
-  };
+  const form = useForm<DoctorRegistrationData>({
+    resolver: zodResolver(doctorRegistrationSchema),
+    defaultValues: {
+      name: "",
+      bmdcNumber: "",
+      phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-  const handlePrevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      window.scrollTo(0, 0);
-    }
-  };
+  const onSubmit = async (data: DoctorRegistrationData) => {
+    console.log("clicking");
+    try {
+      const VALID_PROMO = "123456789";
 
-  const handleSubmit = async () => {
-    let affiliations = "";
-    for (const degree of formData.degrees) {
-      affiliations +=
-        degree.degree + "\n" + degree.institution + "\n" + degree.year + "/n";
-    }
+      // ✅ Local promo check (optional, to prevent useless backend calls)
+      if (data.promoCode !== VALID_PROMO) {
+        toast.error("Invalid Promo Code", {
+          description: "Please enter a valid promo code to continue.",
+        });
+        return;
+      }
 
-    let consultations = "";
-    for (const location of formData.consultationLocations) {
-      consultations += location + "\n";
-    }
+      const payload = {
+        name: data.name,
+        email: data.email,
+        bmdc: data.bmdcNumber,
+        phone: data.phone,
+        password: data.password,
+        promoCode: data.promoCode,
+      };
 
-    const data = {
-      name: formData.name,
-      email: formData.email,
-      imageURL: "http://google.com",
-      bmdc: formData.bmdcNumber,
-      specialty: formData.specialty,
-      address: formData.address,
-      phone: formData.phone,
-      affiliation: affiliations,
-      consultlocation: consultations,
-      password: formData.password,
-    };
+      const response = await register(payload);
 
-    const response = await register(data);
-    if (response.status === 200 || response.status === 201) {
-      toast.success("Registration successful", {
-        description: "Your account has been created.",
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Registration successful", {
+          description: "Your account has been created.",
+        });
+        navigate("/login");
+      }
+    } catch (err: any) {
+      console.error("Registration error:", err);
+
+      const message =
+        err?.response?.data?.message ||
+        "Registration failed. Please try again later.";
+
+      toast.error("Registration failed", {
+        description: message,
       });
-      navigate("/login");
-    }
-  };
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 0:
-        return (
-          <BasicInfoStep formData={formData} updateFormData={updateFormData} />
-        );
-      case 1:
-        return (
-          <ContactInfoStep
-            formData={formData}
-            updateFormData={updateFormData}
-          />
-        );
-      case 2:
-        return (
-          <EducationStep formData={formData} updateFormData={updateFormData} />
-        );
-      case 3:
-        return (
-          <PracticeInfoStep
-            formData={formData}
-            updateFormData={updateFormData}
-          />
-        );
-      case 4:
-        return (
-          <PasswordStep formData={formData} updateFormData={updateFormData} />
-        );
-      default:
-        return null;
     }
   };
 
@@ -168,40 +132,30 @@ const RegisterPage: React.FC = () => {
               Register as a doctor to manage your practice
             </CardDescription>
           </CardHeader>
+
           <CardContent>
-            <StepIndicator currentStep={currentStep} steps={STEPS} />
-
-            <div className="mt-8">{renderStep()}</div>
-
-            <div className="flex justify-between mt-8">
-              {currentStep > 0 ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handlePrevStep}
+            <FormProvider {...form}>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
                 >
-                  Previous
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/login")}
-                >
-                  Back to Login
-                </Button>
-              )}
+                  {/* Doctor Registration Form Fields */}
+                  <DoctorRegistrationForm />
 
-              {currentStep < STEPS.length - 1 ? (
-                <Button type="button" onClick={handleNextStep}>
-                  Next
-                </Button>
-              ) : (
-                <Button type="button" onClick={handleSubmit}>
-                  Complete Registration
-                </Button>
-              )}
-            </div>
+                  <div className="flex justify-between pt-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate("/login")}
+                    >
+                      Back to Login
+                    </Button>
+                    <Button type="submit">Complete Registration</Button>
+                  </div>
+                </form>
+              </Form>
+            </FormProvider>
           </CardContent>
         </Card>
       </div>

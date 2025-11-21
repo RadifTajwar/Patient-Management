@@ -23,7 +23,7 @@ const NoteItem: React.FC<NoteItemProps> = ({
   onViewDetails,
 }) => {
   const getTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
+    switch (type?.toLowerCase()) {
       case "new patient":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
       case "follow up":
@@ -36,10 +36,10 @@ const NoteItem: React.FC<NoteItemProps> = ({
   };
 
   const processISOString = (date: string) => {
-    const year = date.substring(0, 4);
-    const month = date.substring(5, 7);
-    const day = date.substring(8, 10);
-    const time = date.substring(11, 16);
+    const year = date?.substring(0, 4);
+    const month = date?.substring(5, 7);
+    const day = date?.substring(8, 10);
+    const time = date?.substring(11, 16);
 
     let monthName = "";
     switch (month) {

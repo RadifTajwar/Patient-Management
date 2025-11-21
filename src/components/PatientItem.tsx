@@ -19,8 +19,11 @@ interface PatientItemProps {
   dob: Date;
   consultlocation: string;
   treatmentStatus: string;
+  appointmentStatus?: string;
   recentAppointmentDate: string;
   disease: string;
+  lastConsultationId: number;
+  handleStartConsultation: (id: number, patientId: number) => void;
   onViewDetails: (id: number) => void;
 }
 
@@ -39,12 +42,15 @@ const PatientItem: React.FC<PatientItemProps> = ({
   dob,
   consultlocation,
   treatmentStatus,
+  appointmentStatus,
   recentAppointmentDate,
   disease,
   onViewDetails,
+  lastConsultationId,
+  handleStartConsultation,
 }) => {
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "ongoing":
         return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "paused":
@@ -60,18 +66,18 @@ const PatientItem: React.FC<PatientItemProps> = ({
 
   const getInitials = (name: string) => {
     return name
-      .split(" ")
+      ?.split(" ")
       .map((part) => part.charAt(0))
       .join("")
       .toUpperCase()
-      .substring(0, 2);
+      ?.substring(0, 2);
   };
 
   const processISOString = (date: string) => {
-    const year = date.substring(0, 4);
-    const month = date.substring(5, 7);
-    const day = date.substring(8, 10);
-    const time = date.substring(11, 16);
+    const year = date?.substring(0, 4);
+    const month = date?.substring(5, 7);
+    const day = date?.substring(8, 10);
+    const time = date?.substring(11, 16);
 
     let monthName = "";
     switch (month) {
@@ -120,48 +126,68 @@ const PatientItem: React.FC<PatientItemProps> = ({
 
   return (
     <Card className="mb-3 p-4 hover:shadow-md transition-shadow duration-200">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center grid lg:grid-cols-7 gap-4">
-        <div className="space-y-1 col-span-2">
-          <div className="flex items-center space-x-3">
-            <Avatar>
-              <AvatarImage src={imageURL} />
-              <AvatarFallback>{getInitials(name)}</AvatarFallback>
-            </Avatar>
-            <h3 className="font-medium text-lg">{name}</h3>
+      {/* 1 col on mobile; explicit 4 cols on lg: [info | phone | date | actions] */}
+      <div
+        className="grid gap-4 items-center
+                  grid-cols-1
+                  lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+      >
+        {/* Patient Info */}
+        <div className="flex items-start gap-3 min-w-0">
+          <Avatar>
+            <AvatarImage src={imageURL} />
+            <AvatarFallback>{getInitials(name)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <h3 className="font-medium text-lg truncate">{name}</h3>
+            <div className="flex flex-wrap gap-2 text-sm text-gray-500">
+              <span>{sex}</span>
+              <span>•</span>
+              <span>{age} years</span>
+              <span>•</span>
+              <span className="truncate">{consultlocation}</span>
+            </div>
           </div>
-          <div
-            className="flex flex-wrap gap-2 text-sm text-gray-500"
-            style={{ marginLeft: "50px" }}
+        </div>
+
+        {/* Phone */}
+        <div className="lg:justify-center flex">
+          <Badge
+            className={`whitespace-nowrap ${getStatusColor(treatmentStatus)}`}
           >
-            <span>{sex}</span>
-            <span>•</span>
-            <span>{age} years</span>
-            <span>•</span>
-            <span>{consultlocation}</span>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 mt-2 col-span-1">
-          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
-            {disease}
-          </Badge>
-        </div>
-        <div className="flex flex-wrap gap-2 mt-2 col-span-2">
-          <Badge className={getStatusColor(treatmentStatus)}>
-            {treatmentStatus}
+            {phone}
           </Badge>
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-2 col-span-1">
-          <span className="text-sm bg-gray-100 text-gray-800 py-1 px-2 rounded-full">
+        {/* Date */}
+        <div className="lg:justify-center flex">
+          <span className="text-sm bg-gray-100 text-gray-800 py-1 px-3 rounded-full whitespace-nowrap">
             {processISOString(recentAppointmentDate)}
           </span>
         </div>
 
-        <div className="mt-3 md:mt-0 w-full md:w-auto">
+        {/* Actions */}
+
+        <div className="flex justify-end gap-2 shrink-0">
+          {appointmentStatus?.toLowerCase() === "completed" ? (
+            <Button
+              disabled
+              className="bg-gray-300 text-gray-600 cursor-not-allowed rounded-xl px-4 py-2 whitespace-nowrap"
+            >
+              Consultation Completed
+            </Button>
+          ) : (
+            <Button
+              onClick={() => handleStartConsultation(lastConsultationId, id)}
+              className="bg-black hover:bg-blue-700 rounded-xl px-4 py-2 whitespace-nowrap"
+            >
+              Start Consultation
+            </Button>
+          )}
+
           <Button
             onClick={() => onViewDetails(id)}
-            className="bg-black hover:bg-blue-700 w-full md:w-auto rounded-xl px-4 py-2"
-            style={{ float: "right" }}
+            className="bg-black hover:bg-blue-700 rounded-xl px-4 py-2 whitespace-nowrap"
           >
             Details
           </Button>

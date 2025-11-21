@@ -5,18 +5,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { Form, FormControl, FormItem, FormLabel } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -35,7 +30,6 @@ interface DoctorInfo {
   phone: string;
   email: string;
   degrees: Degree[];
-  consultationLocations: string[];
 }
 
 interface EditDoctorProfileModalProps {
@@ -57,7 +51,6 @@ const EditDoctorProfileModal: React.FC<EditDoctorProfileModalProps> = ({
   const [formData, setFormData] = useState<DoctorInfo>({
     ...doctorInfo,
     degrees: JSON.parse(JSON.stringify(doctorInfo.degrees)),
-    consultationLocations: [...doctorInfo.consultationLocations],
   });
 
   const form = useForm<DoctorInfo>({
@@ -71,13 +64,16 @@ const EditDoctorProfileModal: React.FC<EditDoctorProfileModalProps> = ({
   };
 
   const handleSave = () => {
-    // In a real app, you would upload the image here
     if (profileImage) {
-      // Image upload logic would go here
       toast.success("Profile image updated");
     }
 
-    onSave(formData);
+    // ✅ Send formData with degrees array
+    onSave({
+      ...formData,
+      degrees: formData.degrees,
+    });
+
     toast.success("Profile updated successfully");
     onOpenChange(false);
   };
@@ -111,29 +107,14 @@ const EditDoctorProfileModal: React.FC<EditDoctorProfileModalProps> = ({
     handleInputChange("degrees", updatedDegrees);
   };
 
-  const addConsultationLocation = () => {
-    const updatedLocations = [...formData.consultationLocations, ""];
-    handleInputChange("consultationLocations", updatedLocations);
-  };
-
-  const updateConsultationLocation = (index: number, value: string) => {
-    const updatedLocations = [...formData.consultationLocations];
-    updatedLocations[index] = value;
-    handleInputChange("consultationLocations", updatedLocations);
-  };
-
-  const removeConsultationLocation = (index: number) => {
-    const updatedLocations = formData.consultationLocations.filter(
-      (_, i) => i !== index
-    );
-    handleInputChange("consultationLocations", updatedLocations);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Edit Doctor Profile</DialogTitle>
+          <DialogDescription>
+            Update your personal information and educational credentials.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -259,7 +240,7 @@ const EditDoctorProfileModal: React.FC<EditDoctorProfileModalProps> = ({
             {/* Degrees */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Credentials</h3>
+                <h3 className="text-lg font-medium">Educational Degrees</h3>
                 <Button
                   type="button"
                   variant="outline"
@@ -275,7 +256,7 @@ const EditDoctorProfileModal: React.FC<EditDoctorProfileModalProps> = ({
                 {formData.degrees.map((degree, index) => (
                   <div key={index} className="border rounded-md p-4 space-y-4">
                     <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Credential {index + 1}</h4>
+                      <h4 className="font-medium">Degree {index + 1}</h4>
                       <Button
                         type="button"
                         variant="ghost"
@@ -321,47 +302,6 @@ const EditDoctorProfileModal: React.FC<EditDoctorProfileModalProps> = ({
                         </FormControl>
                       </FormItem>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Consultation Locations */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Consultation Locations</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addConsultationLocation}
-                  className="flex items-center gap-1"
-                >
-                  <Plus className="h-4 w-4" /> Add Location
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {formData.consultationLocations.map((location, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Input
-                      value={location}
-                      onChange={(e) =>
-                        updateConsultationLocation(index, e.target.value)
-                      }
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeConsultationLocation(index)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
               </div>

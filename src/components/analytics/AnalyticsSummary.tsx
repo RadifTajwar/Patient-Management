@@ -12,7 +12,7 @@ const AnalyticsSummary = () => {
     try {
       const response = await getCounts();
       if (response.status === 200 || response.status === 201) {
-        console.log(response.data);
+        response.data;
         setTotalPatients(response.data.totalPatients);
         setTotalAppointments(response.data.totalAppointments);
         setTotalConsultationFee(response.data.totalConsultationFee);

@@ -243,7 +243,6 @@ export const PatientRegistrationModal: React.FC<
                               date > new Date() || date < new Date("1900-01-01")
                             }
                             initialFocus
-                            showYearDropdown={true}
                             className={cn("p-3 pointer-events-auto")}
                           />
                         </PopoverContent>

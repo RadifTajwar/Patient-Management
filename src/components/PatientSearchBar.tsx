@@ -10,7 +10,6 @@ interface SearchBarProps {
   setSearchQuery: (query: string) => void;
   onSearch: () => void;
   onMenuToggle: () => void;
-  onAddNewPatient: () => void;
 }
 
 const PatientSearchBar: React.FC<SearchBarProps> = ({
@@ -18,7 +17,6 @@ const PatientSearchBar: React.FC<SearchBarProps> = ({
   setSearchQuery,
   onSearch,
   onMenuToggle,
-  onAddNewPatient,
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +24,6 @@ const PatientSearchBar: React.FC<SearchBarProps> = ({
   };
 
   const { toast } = useToast();
-
-  const handleAddAppointment = () => {
-    onAddNewPatient();
-  };
 
   return (
     <div className="flex justify-between items-center grid md:grid-cols-1 lg:grid-cols-6 gap-6">
@@ -54,14 +48,6 @@ const PatientSearchBar: React.FC<SearchBarProps> = ({
           Search
         </Button>
       </form>
-
-      <Button
-        onClick={handleAddAppointment}
-        className="bg-blue-600 hover:bg-blue-700"
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add New Patient
-      </Button>
     </div>
   );
 };

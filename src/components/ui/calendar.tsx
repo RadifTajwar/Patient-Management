@@ -1,9 +1,10 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { DayPicker } from "react-day-picker";
-
+import { DayPicker, useNavigation } from "react-day-picker";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import "react-day-picker/dist/style.css";
+
+// shadcn Select
 import {
   Select,
   SelectContent,
@@ -13,161 +14,132 @@ import {
 } from "@/components/ui/select";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
-  showYearDropdown?: boolean;
+  fromYear?: number;
+  toYear?: number;
 };
 
-function Calendar({
-  className,
-  classNames,
-  showOutsideDays = true,
-  showYearDropdown = false,
-  ...props
-}: CalendarProps) {
-  const [currentMonth, setCurrentMonth] = React.useState<Date>(
-    props.month || new Date()
+function CaptionWithSelects({
+  displayMonth,
+  fromYear = 2000,
+  toYear = 2035,
+}: {
+  displayMonth: Date;
+  fromYear?: number;
+  toYear?: number;
+}) {
+  const { goToMonth } = useNavigation();
+
+  const months = React.useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, m) =>
+        new Date(2020, m, 1).toLocaleString(undefined, { month: "long" })
+      ),
+    []
   );
 
-  const handleYearChange = (year: string) => {
-    const newDate = new Date(currentMonth);
-    newDate.setFullYear(parseInt(year));
-    setCurrentMonth(newDate);
-    if (props.onMonthChange) {
-      props.onMonthChange(newDate);
-    }
-  };
-
-  const handleMonthChange = (month: string) => {
-    const newDate = new Date(currentMonth);
-    newDate.setMonth(parseInt(month));
-    setCurrentMonth(newDate);
-    if (props.onMonthChange) {
-      props.onMonthChange(newDate);
-    }
-  };
-
-  // Generate year options (current year ± 100 years)
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-    { length: 201 },
-    (_, i) => currentYear - 100 + i
+  const years = React.useMemo(
+    () => Array.from({ length: toYear - fromYear + 1 }, (_, i) => fromYear + i),
+    [fromYear, toYear]
   );
 
-  // Month names
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const CustomCaption = ({ displayMonth }: { displayMonth: Date }) => {
-    if (!showYearDropdown) {
-      return (
-        <div className="flex justify-center pt-1 relative items-center">
-          <div className="text-sm font-medium">
-            {displayMonth.toLocaleDateString("en-US", {
-              month: "long",
-              year: "numeric",
-            })}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex justify-center pt-1 relative items-center gap-2">
-        <Select
-          value={displayMonth.getMonth().toString()}
-          onValueChange={handleMonthChange}
-        >
-          <SelectTrigger className="h-8 w-auto border-0 p-1 font-medium text-sm hover:bg-accent">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="z-50">
-            {monthNames.map((month, index) => (
-              <SelectItem key={index} value={index.toString()}>
-                {month}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={displayMonth.getFullYear().toString()}
-          onValueChange={handleYearChange}
-        >
-          <SelectTrigger className="h-8 w-auto border-0 p-1 font-medium text-sm hover:bg-accent">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="z-50 max-h-60">
-            {yearOptions.map((year) => (
-              <SelectItem key={year} value={year.toString()}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
-  };
+  const currentMonthIndex = displayMonth.getMonth();
+  const currentYear = displayMonth?.getFullYear();
 
   return (
+    <div className="flex items-center justify-center gap-2 py-2 relative">
+      {/* Month dropdown */}
+      <Select
+        value={String(currentMonthIndex)}
+        onValueChange={(val) => {
+          const next = new Date(displayMonth);
+          next.setMonth(parseInt(val, 10));
+          goToMonth(next);
+        }}
+      >
+        <SelectTrigger className="h-8 w-36">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {months.map((label, idx) => (
+            <SelectItem key={idx} value={String(idx)}>
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Year dropdown */}
+      <Select
+        value={String(currentYear)}
+        onValueChange={(val) => {
+          const next = new Date(displayMonth);
+          next.setFullYear(parseInt(val, 10));
+          goToMonth(next);
+        }}
+      >
+        <SelectTrigger className="h-8 w-24">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="max-h-64">
+          {years.map((y) => (
+            <SelectItem key={y} value={String(y)}>
+              {y}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+export function Calendar({
+  className,
+  fromYear = 2000,
+  toYear = 2035,
+  ...props
+}: CalendarProps) {
+  return (
     <DayPicker
-      showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-2", className)}
+      showOutsideDays
+      // We use our own caption with working dropdowns:
+      components={{
+        Caption: (captionProps) => (
+          <CaptionWithSelects
+            displayMonth={captionProps.displayMonth}
+            fromYear={fromYear}
+            toYear={toYear}
+          />
+        ),
+        IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+        IconRight: () => <ChevronRight className="h-4 w-4" />,
+      }}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
-        nav_button: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-        ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
+        month: "space-y-2",
+        caption: "pt-1",
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
         head_cell:
           "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
         row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: cn(
-          buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
-        ),
-        day_range_end: "day-range-end",
+        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
-        day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+        day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
-        day_hidden: "invisible",
-        ...classNames,
+        nav: "space-x-1 flex items-center absolute right-2 top-2",
+        nav_button:
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md",
       }}
-      components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
-        Caption: CustomCaption,
-      }}
-      month={currentMonth}
-      onMonthChange={setCurrentMonth}
+      // keep available years bounded:
+      fromMonth={new Date(fromYear, 0, 1)}
+      toMonth={new Date(toYear, 11, 31)}
       {...props}
     />
   );
 }
-Calendar.displayName = "Calendar";
 
-export { Calendar };
+export default Calendar;

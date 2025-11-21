@@ -1,11 +1,14 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Calendar, Users, X, MessageSquare, CreditCard } from "lucide-react";
-import { FaCalendarCheck } from "react-icons/fa6";
-import { FaCalendarDays } from "react-icons/fa6";
-import { FaUserGroup } from "react-icons/fa6";
-import { FaStickyNote } from "react-icons/fa";
-import { IoMdAnalytics } from "react-icons/io";
+import {
+  CalendarClock,
+  CreditCard,
+  MessageSquare,
+  FileText,
+  BarChart2,
+  X,
+} from "lucide-react";
+import { FaCalendarCheck, FaUserGroup } from "react-icons/fa6";
 
 import {
   Sidebar as SidebarComponent,
@@ -26,19 +29,46 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const menuItems = [
     {
-      label: "Appointments",
+      label: "Analytics Data",
+      icon: <BarChart2 className="mr-2 h-5 w-5" />,
+      path: "/analytics",
+    },
+    {
+      label: "Appointment List",
       icon: <FaCalendarCheck className="mr-2 h-5 w-5" />,
       path: "/appointments",
     },
     {
-      label: "Patients",
+      label: "Patient List",
       icon: <FaUserGroup className="mr-2 h-5 w-5" />,
       path: "/patients",
     },
+
     {
-      label: "Analytics",
-      icon: <IoMdAnalytics className="mr-2 h-5 w-5" />,
-      path: "/analytics",
+      label: "Follow Up",
+      icon: <MessageSquare className="mr-2 h-5 w-5" />,
+      path: "/follow-up",
+    },
+    {
+      label: "Finance",
+      icon: <CreditCard className="mr-2 h-5 w-5" />,
+      path: "/finance",
+    },
+    {
+      label: "Consultant Scheduling",
+      icon: <CalendarClock className="mr-2 h-5 w-5" />,
+      path: "/consultants",
+    },
+    {
+      label: "Research Data",
+      icon: <FileText className="mr-2 h-5 w-5" />,
+      path: "/research",
+    },
+
+    {
+      label: "Account Settings",
+      icon: <CreditCard className="mr-2 h-5 w-5" />,
+      path: "/account",
     },
   ];
 
@@ -82,7 +112,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </ul>
         </nav>
       </div>
-
     </div>
   );
 };

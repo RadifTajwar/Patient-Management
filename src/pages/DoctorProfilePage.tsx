@@ -1,19 +1,18 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  UserRound,
   Mail,
   Phone,
   MapPin,
   Award,
   Edit,
   FileText,
+  Stethoscope,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import EditDoctorProfileModal from "@/components/EditDoctorProfileModal";
-import { useState } from "react";
 import { doctorProfile, updateDoctorProfile } from "../api/auth";
 import { getBMDC } from "../utils/accessutils";
 import { toast } from "@/components/ui/sonner";
@@ -33,54 +32,51 @@ interface DoctorInfo {
   phone: string;
   email: string;
   degrees: Degree[];
-  consultationLocations: string[];
 }
 
 const getInitials = (name: string) => {
   return name
-    .split(" ")
+    ?.split(" ")
     .map((part) => part.charAt(0))
     .join("")
     .toUpperCase()
-    .substring(0, 2);
+    ?.substring(0, 2);
 };
 
+// Helper to safely show value or "Not provided"
+const safeValue = (value: any) => {
+  if (typeof value === "string" && value.trim() !== "") {
+    return value;
+  }
+  return "Not provided";
+};
 const DoctorProfilePage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [doctorInfo, setDoctorInfo] = useState<DoctorInfo>(null);
 
   const fetchDoctorProfile = async () => {
     try {
       const response = await doctorProfile();
+      console.log("response", response);
       if (response.status === 200 || response.status === 201) {
-        const credentials = response.data.affiliation.split("/n");
-        const degrees = [];
-        for (const creds of credentials) {
-          const cred = creds.split("\\n");
-          const degree = {
-            degree: cred[0],
-            institution: cred[1],
-            year: cred[2],
-          };
+        const degrees: Degree[] = response.data.degrees || [];
 
-          degrees.push(degree);
-        }
-
-        const data = {
-          name: response.data.name,
-          specialty: response.data.specialty,
+        const data: DoctorInfo = {
+          name: response.data.name || "",
+          specialty: response.data.specialty || "",
           bmdcNumber: getBMDC(),
-          address: response.data.address,
-          phone: response.data.phone,
-          email: response.data.email,
-          degrees: degrees,
-          consultationLocations: response.data.consultlocation.split("\\n"),
+          address: response.data.address || "",
+          phone: response.data.phone || "",
+          email: response.data.email || "",
+          degrees,
         };
 
         setDoctorInfo(data);
         setIsLoading(false);
       }
     } catch (error) {
+      setIsLoading(false);
       console.error("Error fetching doctor profile: ", error);
     }
   };
@@ -90,30 +86,17 @@ const DoctorProfilePage = () => {
     fetchDoctorProfile();
   }, []);
 
-  const [doctorInfo, setDoctorInfo] = useState<DoctorInfo>(null);
-
   const handleProfileUpdate = async (updatedInfo: DoctorInfo) => {
     setIsLoading(true);
-    let affiliations = "";
-    for (const degree of updatedInfo.degrees) {
-      affiliations +=
-        degree.degree + "\n" + degree.institution + "\n" + degree.year + "/n";
-    }
-
-    let consultations = "";
-    for (const location of updatedInfo.consultationLocations) {
-      consultations += location + "\n";
-    }
 
     const data = {
       name: updatedInfo.name,
       email: updatedInfo.email,
-      imageURL: "http://google.com",
+      imageURL: "",
       specialty: updatedInfo.specialty,
       address: updatedInfo.address,
       phone: updatedInfo.phone,
-      affiliation: affiliations,
-      consultlocation: consultations,
+      degrees: updatedInfo.degrees, // ✅ structured array
     };
 
     try {
@@ -122,11 +105,11 @@ const DoctorProfilePage = () => {
         toast.success("Doctor Profile Updated successfully");
       }
 
-      setIsLoading(false);
       setDoctorInfo(updatedInfo);
     } catch (error) {
-      setIsLoading(false);
       console.error("Error updating doctor profile: ", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -155,39 +138,39 @@ const DoctorProfilePage = () => {
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
             <Avatar className="h-28 w-28">
-              {/* <AvatarImage
-                src={`https://source.unsplash.com/random/100x100/?portrait`}
-                alt={doctorInfo.name}
-              /> */}
               <AvatarFallback className="text-2xl">
-                {getInitials(doctorInfo.name)}
+                {getInitials(doctorInfo.name || "Dr")}
               </AvatarFallback>
             </Avatar>
 
             <div className="space-y-4 flex-1 text-center md:text-left">
               <div>
-                <h2 className="text-2xl font-bold">{doctorInfo.name}</h2>
-                <p className="text-lg text-muted-foreground">
-                  {doctorInfo.specialty}
+                <h2 className="text-2xl font-bold">
+                  {safeValue(doctorInfo.name)}
+                </h2>
+                <p className="text-lg text-muted-foreground flex items-center justify-center md:justify-start gap-2">
+                  <Stethoscope className="h-4 w-4 text-muted-foreground" />
+                  {safeValue(doctorInfo.specialty)}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2 justify-center md:justify-start">
                   <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span>BMDC: {doctorInfo.bmdcNumber}</span>
+                  <span>BMDC: {safeValue(doctorInfo.bmdcNumber)}</span>
                 </div>
+
                 <div className="flex items-center gap-2 justify-center md:justify-start">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{doctorInfo.email}</span>
+                  <span>{safeValue(doctorInfo.email)}</span>
                 </div>
                 <div className="flex items-center gap-2 justify-center md:justify-start">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{doctorInfo.phone}</span>
+                  <span>{safeValue(doctorInfo.phone)}</span>
                 </div>
                 <div className="flex items-center gap-2 justify-center md:justify-start">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{doctorInfo.address}</span>
+                  <span>{safeValue(doctorInfo.address)}</span>
                 </div>
               </div>
             </div>
@@ -195,21 +178,21 @@ const DoctorProfilePage = () => {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              Credentials
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="h-5 w-5" />
+            Educational Degrees
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {doctorInfo.degrees.length > 0 ? (
             <ul className="space-y-4">
               {doctorInfo.degrees.map((degree, index) => (
                 <li key={index} className="space-y-1">
-                  <div className="font-medium">{degree.degree}</div>
+                  <div className="font-medium">{safeValue(degree.degree)}</div>
                   <div className="text-sm text-muted-foreground">
-                    {degree.institution}, {degree.year}
+                    {safeValue(degree.institution)}, {safeValue(degree.year)}
                   </div>
                   {index < doctorInfo.degrees.length - 1 && (
                     <Separator className="my-2" />
@@ -217,31 +200,13 @@ const DoctorProfilePage = () => {
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Consultation Locations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <ul className="list-disc pl-5 space-y-1">
-                  {doctorInfo.consultationLocations.map((location, index) => (
-                    <li key={index} className="text-sm">
-                      {location}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          ) : (
+            <p className="text-muted-foreground">
+              No Educational Degrees provided
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <EditDoctorProfileModal
         open={isEditModalOpen}

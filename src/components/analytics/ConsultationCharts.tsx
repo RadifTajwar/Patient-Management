@@ -46,13 +46,15 @@ const ConsultationCharts: React.FC<ConsultationChartsProps> = ({
   const [locationFilter, setLocationFilter] = useState("None");
   const [typeFilter, setTypeFilter] = useState("None");
   const [diseaseFilter, setDiseaseFilter] = useState("None");
-  const [consultationData, setConsultationData] = useState<ConsultationInfo[]>([]);
+  const [consultationData, setConsultationData] = useState<ConsultationInfo[]>(
+    []
+  );
 
   const fetchConsultationData = async (filters) => {
     try {
       const response = await getConsultationData(filters);
       if (response.status === 200 || response.status === 201) {
-        console.log(response.data);
+        response.data;
         setConsultationData(response.data);
       }
     } catch (error) {
@@ -70,7 +72,6 @@ const ConsultationCharts: React.FC<ConsultationChartsProps> = ({
 
     fetchConsultationData(filters);
   }, []);
-
 
   const chartConfig = {
     consultations: {

@@ -2,8 +2,6 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Menu, Search } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
 
 interface SearchBarProps {
   searchQuery: string;
@@ -23,31 +21,40 @@ const AppointmentSearchBar: React.FC<SearchBarProps> = ({
     onSearch();
   };
 
-  const { toast } = useToast();
-
   return (
-    <div className="flex justify-between items-center grid grid-cols-1 gap-6">
-      <form onSubmit={handleSubmit} className="flex gap-2 w-full">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border rounded-lg shadow-sm p-3">
+      {/* 🔍 Search Bar */}
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-center gap-2 w-full sm:w-auto flex-1"
+      >
         <Input
           type="text"
-          placeholder="Search Patients..."
+          placeholder="Search by patient name, phone, or email..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1"
+          className="flex-1 border-gray-300 focus:ring-2 focus:ring-blue-500"
         />
+
         <Button
-          type="button"
-          variant="outline"
-          onClick={onMenuToggle}
-          className="px-3"
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
         >
-          <Menu className="h-5 w-5" />
-        </Button>
-        <Button type="submit" className="bg-blue-500 hover:bg-blue-700">
-          <Search className="h-5 w-5" />
-          Search
+          <Search className="h-4 w-4" />
+          <span className="hidden sm:inline">Search</span>
         </Button>
       </form>
+
+      {/* 🧭 Filter Toggle Button */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onMenuToggle}
+        className="flex items-center gap-2 border-gray-300 hover:bg-gray-100"
+      >
+        <Menu className="h-5 w-5" />
+        <span className="hidden sm:inline">Filters</span>
+      </Button>
     </div>
   );
 };

@@ -10,11 +10,11 @@ interface NavBarProps {
 
 const getInitials = (name: string) => {
   return name
-    .split(" ")
+    ?.split(" ")
     .map((part) => part.charAt(0))
     .join("")
     .toUpperCase()
-    .substring(0, 2);
+    ?.substring(0, 2);
 };
 
 const NavBar: React.FC<NavBarProps> = ({ onMenuToggle }) => {
@@ -26,26 +26,20 @@ const NavBar: React.FC<NavBarProps> = ({ onMenuToggle }) => {
   return (
     <div className="bg-white  p-4 flex items-center justify-between container">
       <div className="flex items-center ">
-        
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2"
-            onClick={onMenuToggle}
-            aria-label="Toggle menu"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mr-2"
+          onClick={onMenuToggle}
+          aria-label="Toggle menu"
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
+
         <h1 className="text-xl font-semibold">CarePad</h1>
       </div>
 
-      {!isAuthPage && (
-        
-          
-         <UserButton/>
-     
-      )}
+      {!isAuthPage && <UserButton />}
     </div>
   );
 };

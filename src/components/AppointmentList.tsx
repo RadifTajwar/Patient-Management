@@ -4,36 +4,48 @@ import { useToast } from "@/hooks/use-toast";
 import Spinner from "./Spinner";
 
 export interface Appointment {
+  id: number;
   name: string;
   age: number;
   sex: string;
   phone: string;
   email: string;
-  height: string;
-  weight: string;
-  bloodGroup: string;
-  dob: string;
+  height?: string;
+  weight?: string;
+  bloodGroup?: string;
+  dob?: string;
   address: string;
-  imageURL: string;
-  id: number;
-  patientId: number;
-  consultlocation: string;
+  imageURL?: string;
+  patientId: number | null;
+  consultlocation?: string; // legacy
+  consultLocationId?: number | null;
+  consultLocationName?: string;
   consultType: string;
   dateTime: string;
   appointmentStatus: string;
-  patientCondition: string;
+  patientCondition?: string;
+  paymentStatus: string;
+  serialNo: string | number;
+  slotTime?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 interface AppointmentListProps {
   appointments: Appointment[];
-  onStartAppointment: (id: number) => void;
+  handleUpdateAppointment: (
+    id: number,
+    updatedData: Partial<Appointment>
+  ) => void;
+  onConfirmAppointment: (id: number) => void;
   onDeleteAppointment: (id: number) => void;
   isLoading: boolean;
 }
 
 const AppointmentList: React.FC<AppointmentListProps> = ({
   appointments,
-  onStartAppointment,
+  handleUpdateAppointment,
+  onConfirmAppointment,
   onDeleteAppointment,
   isLoading = false,
 }) => {
@@ -64,7 +76,8 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
           <AppointmentItem
             key={appointment.id}
             {...appointment}
-            onStartAppointment={onStartAppointment}
+            handleUpdateAppointment={handleUpdateAppointment}
+            onConfirmAppointment={onConfirmAppointment}
             onDeleteAppointment={onDeleteAppointment}
           />
         ))

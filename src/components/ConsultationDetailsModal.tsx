@@ -19,7 +19,7 @@ import {
   MessageSquare,
   Headphones,
 } from "lucide-react";
-import { ConsultationInfo } from "../pages/ConsultationPage";
+import { ConsultationInfo } from "@/interface/AllInterfaces";
 
 interface ConsultationDetailsModalProps {
   isOpen: boolean;
@@ -34,7 +34,6 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
 }) => {
   if (!consultation) {
     return null;
-    
   }
 
   const [medicineNames, setMedicineNames] = useState<string[]>([]);
@@ -42,45 +41,19 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
   const [medicineDuration, setMedicineDuration] = useState<string[]>([]);
   const [medicalTests, setMedicalTests] = useState<string[]>([]);
   const [medicalReports, setMedicalReports] = useState<string[]>([]);
-  const [medicalFiles, setMedicalFiles] = useState<string[]>([]);
+  const [medicalFiles, setMedicalFiles] = useState<string>("");
   const [patientVitals, setPatientVitals] = useState<string[]>([]);
   const [patientCondition, setPatientCondition] = useState<string>("");
-
+  const [prescription, setPrescription] = useState<string>("");
   useEffect(() => {
-    // console.log("Consultation Data:", consultation);
-    // const patientData = consultation?.patientCondition?.split("\n");
-
-    // console.log("Patient Data:", patientData);
-    // setPatientCondition(consultation?.patientCondition || "" );
-
-    // const patientVitals = patientData?.splice(-1);
-    // setPatientVitals(patientData );
-
-    // const medicineData = consultation?.medicine?.split("/n");
-    // const medicineNames = medicineData[0]?.split("\n");
-    // setMedicineNames(medicineNames);
-
-    // const medicineQuantity = medicineData[1]?.split("\n");
-    // setMedicineQuantity(medicineQuantity);
-
-    // const medicineDuration = medicineData[2]?.split("\n");
-    // setMedicineDuration(medicineDuration);
-
-    // const medicalTests = consultation?.medicalTests?.split("\n");
-    // setMedicalTests(medicalTests);
-
-    // const medicalReports = consultation?.medicalReports?.split("\n");
-    // setMedicalReports(medicalReports);
-
-    // const medicalFiles = consultation?.medicalFiles?.split("\n");
-    // setMedicalFiles(medicalFiles);
-  }, []);
+    setPrescription(consultation?.prescription);
+  }, [consultation]);
 
   const processISOString = (date: string) => {
-    const year = date.substring(0, 4);
-    const month = date.substring(5, 7);
-    const day = date.substring(8, 10);
-    const time = date.substring(11, 16);
+    const year = date?.substring(0, 4);
+    const month = date?.substring(5, 7);
+    const day = date?.substring(8, 10);
+    const time = date?.substring(11, 16);
 
     let monthName = "";
     switch (month) {
@@ -127,9 +100,27 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
     return dateFormat;
   };
 
+  const handleDownload = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = url?.split("/").pop() || "prescription.pdf"; // use filename from URL
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden">
+      <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -154,12 +145,12 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
               <div>
                 <Badge
                   className={
-                    consultation?.recoveryStatus === 1
+                    Number(consultation?.recoveryStatus) === 1
                       ? "bg-green-600"
                       : "bg-amber-500"
                   }
                 >
-                  {consultation?.recoveryStatus === 1
+                  {Number(consultation?.recoveryStatus) === 1
                     ? "Recovered"
                     : "Not Recovered"}
                 </Badge>
@@ -175,7 +166,7 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
                   Medications
                 </TabsTrigger>
                 <TabsTrigger className="rounded-full" value="records">
-                  Medical Records
+                  Prescription
                 </TabsTrigger>
                 <TabsTrigger className="rounded-full" value="followup">
                   Follow-up
@@ -190,10 +181,10 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
                       <h3 className="font-medium mb-3">
                         Patient Condition & Symptoms
                       </h3>
-                      {patientCondition && (
+                      {consultation.patientCondition && (
                         <div className="mb-3">
                           <p className="text-sm text-gray-500">Condition</p>
-                          <p>{patientCondition}</p>
+                          <p>{consultation.patientCondition}</p>
                         </div>
                       )}
                     </CardContent>
@@ -275,21 +266,46 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
 
               {/* Medical Records Tab */}
               <TabsContent value="records" className="pt-4 space-y-4">
-                {consultation?.medicalTests && medicalTests?.length > 0 && (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <h3 className="font-medium mb-3 flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        Recommended Medical Tests
-                      </h3>
-                      <ul className="list-disc pl-5">
-                        {medicalTests?.map((test, index) => (
-                          <li key={index}>{test}</li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
+                {consultation?.prescription &&
+                  consultation?.prescription?.length > 0 && (
+                    <Card className="border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 px-6 py-3 flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+                          <MessageSquare className="h-5 w-5 text-blue-500" />
+                          Prescription
+                        </h3>
+                        <div className="flex gap-3">
+                          <a
+                            href={consultation.prescription}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline text-sm"
+                          >
+                            Open
+                          </a>
+                          <button
+                            onClick={() =>
+                              handleDownload(consultation.prescription)
+                            }
+                            className="text-green-600 hover:text-green-800 underline text-sm"
+                          >
+                            Download
+                          </button>
+                        </div>
+                      </div>
+                      <CardContent className="p-0">
+                        <div className="overflow-hidden rounded-b-lg">
+                          <iframe
+                            src={consultation.prescription}
+                            width="100%"
+                            height="500px"
+                            className="border-t border-gray-200"
+                            title="Prescription PDF"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
                 {consultation?.medicalReports && medicalReports?.length > 0 && (
                   <Card>
@@ -336,12 +352,12 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
                         <h3 className="font-medium mb-2">Recovery Status</h3>
                         <Badge
                           className={
-                            consultation?.recoveryStatus === 1
+                            Number(consultation?.recoveryStatus) === 1
                               ? "bg-green-600"
                               : "bg-amber-500"
                           }
                         >
-                          {consultation?.recoveryStatus === 1
+                          {Number(consultation?.recoveryStatus) === 1
                             ? "Recovered"
                             : "Not Recovered"}
                         </Badge>

@@ -70,9 +70,6 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
       consultationFee,
     });
 
-    console.log(date.toISOString());
-    console.log(time);
-
     // Reset form fields
     setLocation("");
     setType("");

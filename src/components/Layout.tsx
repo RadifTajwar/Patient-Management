@@ -17,9 +17,9 @@ const Layout: React.FC = () => {
     const refreshToken = getRefreshToken();
     const bmdc = getBMDC();
 
-    console.log("Access Token:", accessToken);
-    console.log("Refresh Token:", refreshToken);
-    console.log("BMDC:", bmdc);
+    "Access Token:", accessToken;
+    "Refresh Token:", refreshToken;
+    "BMDC:", bmdc;
 
     if (accessToken && refreshToken && bmdc) {
       setStatus("loaded");
@@ -48,9 +48,7 @@ const Layout: React.FC = () => {
     <SidebarProvider>
       <div className="flex flex-col min-h-screen w-full">
         <div className="nav w-full mx-auto bg-white border-b">
-
-        <NavBar onMenuToggle={toggleSidebar} />
-
+          <NavBar onMenuToggle={toggleSidebar} />
         </div>
         <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 

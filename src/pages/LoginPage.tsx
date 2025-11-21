@@ -25,14 +25,13 @@ import {
 import { useState } from "react";
 import { toast } from "@/components/ui/sonner";
 import { login, doctorProfile } from "../api/auth";
-import { saveDoctorName } from "../utils/profileutils";
 
 import {
   saveAccessToken,
   saveRefreshToken,
   saveBMDC,
+  saveDoctorInfo,
 } from "../utils/accessutils";
-import { access } from "fs";
 
 // Define form schema
 const formSchema = z.object({
@@ -64,12 +63,13 @@ const LoginPage: React.FC = () => {
       const token = response.data.token;
       const refreshToken = response.data.refreshToken;
       const bmdc = response.data.bmdc;
-      console.log("token is ", token);
-      console.log("refreshToken is ", refreshToken);
-      console.log("bmdc is ", bmdc);
+      const doctorInfo = response.data.doctorInfo;
+      toast.success("Login successful!");
       saveAccessToken(token);
       saveRefreshToken(refreshToken);
       saveBMDC(bmdc);
+      console.log("infosss are ", doctorInfo);
+      saveDoctorInfo(doctorInfo);
 
       //const result = await doctorProfile();
       //saveDoctorName(result.data.name);

@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -16,25 +15,38 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, FilterX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface FiltersProps {
+interface Option {
+  id: number | string;
+  name: string;
+}
+
+interface PatientFiltersProps {
   location: string;
   setLocation: (location: string) => void;
   status: string;
   setStatus: (status: string) => void;
   disease: string;
-  setDisease: (type: string) => void;
+  setDisease: (disease: string) => void;
   sex: string;
-  setSex: (type: string) => void;
+  setSex: (sex: string) => void;
+  slotTime: string;
+  setSlotTime: (slot: string) => void;
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   applyFilters: () => void;
   clearFilters: () => void;
+
+  // Dynamic dropdown options
+  locationOptions: Option[];
+  diseaseOptions: Option[];
+  sexOptions: Option[];
+  slotTimeOptions: Option[];
 }
 
-const PatientFilters: React.FC<FiltersProps> = ({
+const PatientFilters: React.FC<PatientFiltersProps> = ({
   location,
   setLocation,
   status,
@@ -43,35 +55,44 @@ const PatientFilters: React.FC<FiltersProps> = ({
   setDisease,
   sex,
   setSex,
+  slotTime,
+  setSlotTime,
   date,
   setDate,
   applyFilters,
   clearFilters,
+  locationOptions,
+  diseaseOptions,
+  sexOptions,
+  slotTimeOptions,
 }) => {
   return (
-    <div
-      className="p-4 rounded-md shadow-sm border mb-4"
-      style={{ background: "#f5f5f5" }}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="bg-white border rounded-lg shadow-sm p-4 mt-3 animate-in fade-in duration-150">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+        {/* 🏥 Consultation Location */}
         <div className="space-y-2">
-          <Label htmlFor="location">Consultation Location</Label>
+          <Label htmlFor="location" className="text-sm font-medium">
+            Consultation Location
+          </Label>
           <Select value={location} onValueChange={setLocation}>
             <SelectTrigger id="location">
               <SelectValue placeholder="Select location" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="None">None</SelectItem>
-              <SelectItem value="main-clinic">Main Clinic</SelectItem>
-              <SelectItem value="north-branch">North Branch</SelectItem>
-              <SelectItem value="south-branch">South Branch</SelectItem>
-              <SelectItem value="virtual">Virtual</SelectItem>
+              {locationOptions.map((loc) => (
+                <SelectItem key={loc.id} value={String(loc.id)}>
+                  {loc.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
+        {/* 🩺 Treatment Status */}
         <div className="space-y-2">
-          <Label htmlFor="status">Treatment Status</Label>
+          <Label htmlFor="status" className="text-sm font-medium">
+            Treatment Status
+          </Label>
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger id="status">
               <SelectValue placeholder="Select status" />
@@ -86,43 +107,74 @@ const PatientFilters: React.FC<FiltersProps> = ({
           </Select>
         </div>
 
+        {/* 🧬 Disease */}
         <div className="space-y-2">
-          <Label htmlFor="type">Disease</Label>
+          <Label htmlFor="disease" className="text-sm font-medium">
+            Disease
+          </Label>
           <Select value={disease} onValueChange={setDisease}>
-            <SelectTrigger id="type">
-              <SelectValue placeholder="Select type" />
+            <SelectTrigger id="disease">
+              <SelectValue placeholder="Select disease" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="None">None</SelectItem>
-              <SelectItem value="Fever">Fever</SelectItem>
-              <SelectItem value="Diarhoea">Diarhoea</SelectItem>
-              <SelectItem value="Headache">Headache</SelectItem>
+              {diseaseOptions.map((dis) => (
+                <SelectItem key={dis.id} value={String(dis.id)}>
+                  {dis.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
+        {/* 🚻 Sex */}
         <div className="space-y-2">
-          <Label htmlFor="type">Sex</Label>
+          <Label htmlFor="sex" className="text-sm font-medium">
+            Sex
+          </Label>
           <Select value={sex} onValueChange={setSex}>
-            <SelectTrigger id="type">
-              <SelectValue placeholder="Select type" />
+            <SelectTrigger id="sex">
+              <SelectValue placeholder="Select sex" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="None">None</SelectItem>
-              <SelectItem value="Male">Male</SelectItem>
-              <SelectItem value="Female">Female</SelectItem>
-              <SelectItem value="Unknown">Unknown</SelectItem>
+              {sexOptions.map((s) => (
+                <SelectItem key={s.id} value={String(s.id)}>
+                  {s.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
+        {/* ⏰ Time Slot */}
         <div className="space-y-2">
-          <Label>Recent Appointment Date</Label>
+          <Label htmlFor="slotTime" className="text-sm font-medium">
+            Time Slot
+          </Label>
+          <Select value={slotTime} onValueChange={setSlotTime}>
+            <SelectTrigger id="slotTime">
+              <SelectValue placeholder="Select time slot" />
+            </SelectTrigger>
+            <SelectContent>
+              {slotTimeOptions.map((slot) => (
+                <SelectItem key={slot.id} value={String(slot.id)}>
+                  {slot.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* 🗓️ Recent Appointment Date */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Recent Appointment Date</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full justify-start text-left font-normal"
+                className={cn(
+                  "w-full justify-start text-left font-normal border-gray-300",
+                  !date && "text-muted-foreground"
+                )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -134,22 +186,28 @@ const PatientFilters: React.FC<FiltersProps> = ({
                 selected={date}
                 onSelect={setDate}
                 initialFocus
-                className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
           </Popover>
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end space-x-2">
-        <Button variant="outline" onClick={clearFilters}>
+      {/* 🔘 Action Buttons */}
+      <div className="mt-6 flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={clearFilters}
+          className="flex items-center gap-2 border-gray-300 hover:bg-gray-100"
+        >
+          <FilterX className="h-4 w-4" />
           Clear
         </Button>
+
         <Button
-          className="bg-blue-600 hover:bg-blue-700"
           onClick={applyFilters}
+          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
         >
-          Apply
+          Apply Filters
         </Button>
       </div>
     </div>

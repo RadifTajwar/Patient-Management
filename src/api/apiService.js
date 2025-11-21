@@ -1,10 +1,10 @@
-import axios from 'axios';
+import axios from "axios";
 import { getAccessToken, getRefreshToken, getBMDC } from "../utils/accessutils";
 
 const api = axios.create({
-  baseURL: 'https://85dc8115ee08.ngrok-free.app/',
+  baseURL: "https://patient-management-backend-o1ga.onrender.com",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -12,7 +12,7 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token);
   });
@@ -27,19 +27,21 @@ api.interceptors.request.use(
     const bmdc = getBMDC();
 
     if (accessToken) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`;
+      config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
     if (verificationToken) {
-      config.headers['Verification'] = `Bearer ${verificationToken}`;
+      config.headers["Verification"] = `Bearer ${verificationToken}`;
     }
 
     if (bmdc) {
-      config.headers['bmdc'] = bmdc;
+      config.headers["bmdc"] = bmdc;
     }
-
+    // console.log("Request Headers:", config.headers);
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
 // Response Interceptor (optional: token refresh logic)
@@ -47,27 +49,15 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    /*checking the actual error parameter */
-    console.log("Error in response interceptor:");
-    if (error.response) {
-      console.log("Status:", error.response.status);
-      console.log("Data:", error.response.data);
-    } else if (error.request) {
-      console.log("Request sent but no response received");
-      console.log("Request:", error.request);
-    } else {
-      console.log("Something went wrong setting up the request:", error.message);
-    }
-    console.log("Error Code:", error.code);
-
-
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    /*checking the actual error parameter */ if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+        }).then((token) => {
+          originalRequest.headers["Authorization"] = `Bearer ${token}`;
           return api(originalRequest);
         });
       }
@@ -75,23 +65,25 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      console.log('hey everyone wait till i refresh the token');
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const { data } = await axios.post('https://85dc8115ee08.ngrok-free.app//auth/refresh', {
-          refreshToken,
-        });
+        const refreshToken = localStorage.getItem("refreshToken");
+        const { data } = await axios.post(
+          "http://localhost:3000/auth/refresh",
+          {
+            refreshToken,
+          }
+        );
 
-        localStorage.setItem('accessToken', data.accessToken);
-        api.defaults.headers['Authorization'] = `Bearer ${data.accessToken}`;
+        localStorage.setItem("accessToken", data.accessToken);
+        api.defaults.headers["Authorization"] = `Bearer ${data.accessToken}`;
         processQueue(null, data.accessToken);
 
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

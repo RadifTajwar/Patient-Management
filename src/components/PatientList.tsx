@@ -20,17 +20,20 @@ export interface Patient {
   treatmentStatus: string;
   recentAppointmentDate: Date;
   disease: string;
+  lastConsultationId: number;
 }
 
 interface PatientListProps {
   patients: Patient[];
   onViewDetails: (id: number) => void;
   isLoading: boolean;
+  handleStartConsultation?: (id: number, patientId: number) => void;
 }
 
 const PatientList: React.FC<PatientListProps> = ({
   patients,
   onViewDetails,
+  handleStartConsultation,
   isLoading = false,
 }) => {
   const { toast } = useToast();
@@ -61,6 +64,7 @@ const PatientList: React.FC<PatientListProps> = ({
             key={patient.id}
             {...patient}
             onViewDetails={onViewDetails}
+            handleStartConsultation={handleStartConsultation}
           />
         ))
       )}

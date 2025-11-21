@@ -59,7 +59,7 @@ const PatientCharts: React.FC<PatientChartsProps> = ({ selectedYear }) => {
     try {
       const response = await getPatientData(filters);
       if (response.status === 200 || response.status === 201) {
-        console.log(response.data);
+        response.data;
         setPatientData(response.data);
       }
     } catch (error) {
@@ -71,7 +71,7 @@ const PatientCharts: React.FC<PatientChartsProps> = ({ selectedYear }) => {
     try {
       const response = await getGenderDist();
       if (response.status === 200 || response.status === 201) {
-        console.log(response.data);
+        response.data;
         setGenderData(response.data);
       }
     } catch (error) {

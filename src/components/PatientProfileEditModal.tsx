@@ -80,11 +80,11 @@ export const PatientProfileEditModal: React.FC<
 
   const getInitials = (name: string) => {
     return name
-      .split(" ")
+      ?.split(" ")
       .map((part) => part.charAt(0))
       .join("")
       .toUpperCase()
-      .substring(0, 2);
+      ?.substring(0, 2);
   };
 
   // Mock function to simulate image upload
@@ -125,19 +125,6 @@ export const PatientProfileEditModal: React.FC<
                     {getInitials(patient.name)}
                   </AvatarFallback>
                 </Avatar>
-                <Label
-                  htmlFor="picture"
-                  className="cursor-pointer text-sm px-3 py-1 border rounded text-primary border-primary hover:bg-primary/5"
-                >
-                  Change Picture
-                </Label>
-                <Input
-                  id="picture"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
               </div>
             </div>
 
@@ -196,7 +183,7 @@ export const PatientProfileEditModal: React.FC<
                 />
               </div>
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="dob"
                 render={({ field }) => (
@@ -236,7 +223,7 @@ export const PatientProfileEditModal: React.FC<
                     </FormControl>
                   </FormItem>
                 )}
-              />
+              /> */}
 
               <FormField
                 control={form.control}
