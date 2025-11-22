@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -11,17 +11,17 @@ import {
 } from "@/components/ui/card";
 import { register } from "../api/auth";
 
-// shadcn + react-hook-form + zod
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
+
 import DoctorRegistrationForm from "@/components/auth/DoctorRegistrationForm";
 import { DoctorRegistrationData } from "@/interface/doctor/doctorInterfaces";
 import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
-const VALID_PROMO = "123456789";
-
-export const doctorRegistrationSchema = z
+// SAME VALIDATIONS AS BEFORE
+const doctorRegistrationSchema = z
   .object({
     name: z
       .string()
@@ -48,7 +48,7 @@ export const doctorRegistrationSchema = z
       .string()
       .trim()
       .email("Invalid email address")
-      .transform((val) => val?.toLowerCase()),
+      .transform((val) => val.toLowerCase()),
 
     promoCode: z.string().trim().min(1, "Promo code is required"),
 
@@ -61,9 +61,13 @@ export const doctorRegistrationSchema = z
     path: ["confirmPassword"],
   });
 
-// -------------------- RegisterPage Component --------------------
+const VALID_PROMO = "123456789";
+
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
 
   const form = useForm<DoctorRegistrationData>({
     resolver: zodResolver(doctorRegistrationSchema),
@@ -74,19 +78,22 @@ const RegisterPage: React.FC = () => {
       email: "",
       password: "",
       confirmPassword: "",
+      promoCode: "",
     },
   });
 
   const onSubmit = async (data: DoctorRegistrationData) => {
-    console.log("clicking");
     try {
-      const VALID_PROMO = "123456789";
+      setLoading(true);
 
-      // ✅ Local promo check (optional, to prevent useless backend calls)
+      // Promo code check (local)
       if (data.promoCode !== VALID_PROMO) {
         toast.error("Invalid Promo Code", {
           description: "Please enter a valid promo code to continue.",
         });
+
+        setShake(true);
+        setTimeout(() => setShake(false), 500);
         return;
       }
 
@@ -105,6 +112,7 @@ const RegisterPage: React.FC = () => {
         toast.success("Registration successful", {
           description: "Your account has been created.",
         });
+
         navigate("/login");
       }
     } catch (err: any) {
@@ -117,13 +125,30 @@ const RegisterPage: React.FC = () => {
       toast.error("Registration failed", {
         description: message,
       });
+
+      // shake animation
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-gray-50 py-10 px-4">
+    <div className="relative flex justify-center min-h-screen bg-gray-50 py-10 px-4">
+      {/* Full-page overlay loader */}
+      {loading && (
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-50">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+        </div>
+      )}
+
       <div className="w-full max-w-3xl">
-        <Card>
+        <Card
+          className={`transition-all duration-300 ${
+            shake ? "animate-shake" : ""
+          }`}
+        >
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">
               Create an Account
@@ -140,18 +165,28 @@ const RegisterPage: React.FC = () => {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-4"
                 >
-                  {/* Doctor Registration Form Fields */}
-                  <DoctorRegistrationForm />
+                  <DoctorRegistrationForm disabled={loading} />
 
                   <div className="flex justify-between pt-3">
                     <Button
                       type="button"
                       variant="outline"
+                      disabled={loading}
                       onClick={() => navigate("/login")}
                     >
                       Back to Login
                     </Button>
-                    <Button type="submit">Complete Registration</Button>
+
+                    <Button type="submit" disabled={loading}>
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          Creating...
+                        </div>
+                      ) : (
+                        "Complete Registration"
+                      )}
+                    </Button>
                   </div>
                 </form>
               </Form>
@@ -159,6 +194,20 @@ const RegisterPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Shaking animation */}
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-8px); }
+          80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+          animation: shake 0.4s ease-in-out;
+        }
+      `}</style>
     </div>
   );
 };

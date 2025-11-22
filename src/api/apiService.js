@@ -8,18 +8,7 @@ const api = axios.create({
   },
 });
 
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) prom.reject(error);
-    else prom.resolve(token);
-  });
-  failedQueue = [];
-};
-
-// Request Interceptor: attach both tokens
+// Request Interceptor — attach tokens
 api.interceptors.request.use(
   (config) => {
     const accessToken = getAccessToken();
@@ -29,6 +18,7 @@ api.interceptors.request.use(
     if (accessToken) {
       config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
+
     if (verificationToken) {
       config.headers["Verification"] = `Bearer ${verificationToken}`;
     }
@@ -36,59 +26,21 @@ api.interceptors.request.use(
     if (bmdc) {
       config.headers["bmdc"] = bmdc;
     }
-    // console.log("Request Headers:", config.headers);
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response Interceptor (optional: token refresh logic)
+// Response Interceptor — no refresh attempt, just pass errors
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    /*checking the actual error parameter */ if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers["Authorization"] = `Bearer ${token}`;
-          return api(originalRequest);
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        const { data } = await axios.post(
-          "http://localhost:3000/auth/refresh",
-          {
-            refreshToken,
-          }
-        );
-
-        localStorage.setItem("accessToken", data.accessToken);
-        api.defaults.headers["Authorization"] = `Bearer ${data.accessToken}`;
-        processQueue(null, data.accessToken);
-
-        return api(originalRequest);
-      } catch (err) {
-        processQueue(err, null);
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
-        return Promise.reject(err);
-      } finally {
-        isRefreshing = false;
-      }
-    }
+  (error) => {
+    // Optional: You may handle 401 here, but no refresh
+    // For example:
+    // if (error.response?.status === 401) {
+    //   console.log("Unauthorized - token may be expired");
+    // }
 
     return Promise.reject(error);
   }
